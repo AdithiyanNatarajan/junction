@@ -61,15 +61,54 @@ const AIDecisions = () => {
   }, []);
 
   const handleAcceptDecision = (id: string) => {
-    setDecisions(prev => prev.map(decision => 
-      decision.id === id ? { ...decision, status: 'accepted' as const } : decision
-    ));
+    // Send acceptance to backend
+    fetch(`http://127.0.0.1:8000/decisions/${id}/accept`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Decision accepted:', data);
+      // Update local state
+      setDecisions(prev => prev.map(decision => 
+        decision.id === id ? { ...decision, status: 'accepted' as const } : decision
+      ));
+    })
+    .catch(error => {
+      console.error('Error accepting decision:', error);
+      // Still update local state for demo purposes
+      setDecisions(prev => prev.map(decision => 
+        decision.id === id ? { ...decision, status: 'accepted' as const } : decision
+      ));
+    });
   };
 
   const handleRejectDecision = (id: string) => {
-    setDecisions(prev => prev.map(decision => 
-      decision.id === id ? { ...decision, status: 'rejected' as const } : decision
-    ));
+  const handleRejectDecision = (id: string, reason: string) => {
+    // Send rejection to backend with reason
+    fetch(`http://127.0.0.1:8000/decisions/${id}/reject?reason=${reason}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Decision rejected:', data);
+      // Update local state
+      setDecisions(prev => prev.map(decision => 
+        decision.id === id ? { ...decision, status: 'rejected' as const } : decision
+      ));
+    })
+    .catch(error => {
+      console.error('Error rejecting decision:', error);
+      // Still update local state for demo purposes
+      setDecisions(prev => prev.map(decision => 
+        decision.id === id ? { ...decision, status: 'rejected' as const } : decision
+      ));
+    });
   };
 
   const pendingCount = decisions.filter(d => d.status === 'pending').length;

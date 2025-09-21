@@ -2,12 +2,15 @@ import { Decision } from '@/data/mockData';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { CheckCircle, X, Clock, Route, Zap, Calendar } from 'lucide-react';
+import { useState } from 'react';
 
 interface DecisionPanelProps {
   decisions: Decision[];
   onAccept: (id: string) => void;
-  onReject: (id: string) => void;
+  onReject: (id: string, reason: string) => void;
 }
 
 const typeIcons = {
@@ -23,6 +26,31 @@ const typeColors = {
 };
 
 export default function DecisionPanel({ decisions, onAccept, onReject }: DecisionPanelProps) {
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [selectedDecisionId, setSelectedDecisionId] = useState<string>('');
+  const [rejectionReason, setRejectionReason] = useState<string>('');
+
+  const rejectionReasons = [
+    { value: 'safety', label: 'Safety Concerns' },
+    { value: 'special_service', label: 'Special Service Requirements' },
+    { value: 'local_knowledge', label: 'Local Knowledge Override' },
+    { value: 'other', label: 'Other' }
+  ];
+
+  const handleRejectClick = (decisionId: string) => {
+    setSelectedDecisionId(decisionId);
+    setRejectDialogOpen(true);
+  };
+
+  const handleRejectConfirm = () => {
+    if (selectedDecisionId && rejectionReason) {
+      onReject(selectedDecisionId, rejectionReason);
+      setRejectDialogOpen(false);
+      setSelectedDecisionId('');
+      setRejectionReason('');
+    }
+  };
+
   const pendingDecisions = decisions.filter(d => d.status === 'pending');
   const processedDecisions = decisions.filter(d => d.status !== 'pending');
 
@@ -77,7 +105,7 @@ export default function DecisionPanel({ decisions, onAccept, onReject }: Decisio
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => onReject(decision.id)}
+                    onClick={() => handleRejectClick(decision.id)}
                     className="flex-1"
                   >
                     <X className="w-4 h-4 mr-2" />
@@ -140,6 +168,50 @@ export default function DecisionPanel({ decisions, onAccept, onReject }: Decisio
           <p className="text-sm text-muted-foreground mt-1">AI will recommend optimizations as needed</p>
         </div>
       )}
+
+      {/* Rejection Reason Dialog */}
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reason for Rejection</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Please select the primary reason for rejecting this AI decision. This helps improve future recommendations.
+            </p>
+            
+            <Select value={rejectionReason} onValueChange={setRejectionReason}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select rejection reason" />
+              </SelectTrigger>
+              <SelectContent>
+                {rejectionReasons.map((reason) => (
+                  <SelectItem key={reason.value} value={reason.value}>
+                    {reason.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <div className="flex gap-2 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setRejectDialogOpen(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleRejectConfirm}
+                disabled={!rejectionReason}
+                className="flex-1"
+              >
+                Confirm Rejection
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

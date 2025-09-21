@@ -1,10 +1,33 @@
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import Dashboard from '@/components/Dashboard';
 import { Monitor, Settings, Brain, Zap } from 'lucide-react';
 
 const Index = () => {
+  const [filteredTrains, setFilteredTrains] = useState([]);
+  const [selectedArea, setSelectedArea] = useState('');
+
+  const handleAreaChange = (area: string) => {
+    setSelectedArea(area);
+    
+    if (area) {
+      // Fetch filtered trains from backend
+      fetch(`http://127.0.0.1:8000/trains/status?area=${area}`)
+        .then(response => response.json())
+        .then(data => {
+          console.log(`Filtered trains for ${area}:`, data);
+          setFilteredTrains(data.trains || []);
+        })
+        .catch(error => {
+          console.error('Error fetching filtered trains:', error);
+        });
+    } else {
+      setFilteredTrains([]);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
@@ -49,7 +72,10 @@ const Index = () => {
       </nav>
 
       {/* Main Dashboard */}
-      <Dashboard />
+      <Dashboard 
+        filteredTrains={filteredTrains}
+        onAreaChange={handleAreaChange}
+      />
     </div>
   );
 };

@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react';
+import { useState } from 'react';
 import L from 'leaflet';
 import { Train, RailwaySegment } from '@/data/mockData';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 
 // Default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -18,6 +21,8 @@ interface RailwayMapProps {
   onTrainDrag?: (trainId: string, position: [number, number]) => void;
   draggableSegments?: boolean;
   onSegmentDrag?: (segmentId: string, start: [number, number], end: [number, number]) => void;
+  showAreaSelection?: boolean;
+  onAreaChange?: (area: string) => void;
 }
 
 const trainIcons = {
@@ -48,13 +53,31 @@ export default function RailwayMap({
   onTrainDrag,
   draggableSegments = false,
   onSegmentDrag,
+  showAreaSelection = false,
+  onAreaChange,
 }: RailwayMapProps) {
+  const [selectedArea, setSelectedArea] = useState<string>('all');
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const segmentsRef = useRef<Map<string, L.Polyline>>(new Map());
   const segmentMarkersRef = useRef<Map<string, [L.Marker, L.Marker]>>(new Map());
 
+  const areas = [
+    { value: 'all', label: 'All Areas' },
+    { value: 'delhi', label: 'Delhi Region' },
+    { value: 'mumbai', label: 'Mumbai Region' },
+    { value: 'chennai', label: 'Chennai Region' },
+    { value: 'kolkata', label: 'Kolkata Region' },
+    { value: 'bangalore', label: 'Bangalore Region' }
+  ];
+
+  const handleAreaChange = (area: string) => {
+    setSelectedArea(area);
+    if (onAreaChange) {
+      onAreaChange(area === 'all' ? '' : area);
+    }
+  };
   // Initialize map only once
   useEffect(() => {
     if (mapRef.current || !mapContainerRef.current) return;
@@ -257,10 +280,31 @@ export default function RailwayMap({
 
   return (
     <div className={`relative ${className}`}>
+      {/* Area Selection Controls */}
+      {showAreaSelection && (
+        <div className="absolute top-4 left-4 z-10 bg-card/90 backdrop-blur-sm border border-border rounded-lg p-3">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Focus Area:</span>
+            <Select value={selectedArea} onValueChange={handleAreaChange}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {areas.map((area) => (
+                  <SelectItem key={area.value} value={area.value}>
+                    {area.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+      
       <div ref={mapContainerRef} className="w-full h-full rounded-lg" />
 
       {/* Legend */}
-      <div className="absolute top-4 right-4 bg-card/90 backdrop-blur-sm border border-border rounded-lg p-3 text-sm animate-fade-in">
+      <div className={`absolute ${showAreaSelection ? 'top-20' : 'top-4'} right-4 bg-card/90 backdrop-blur-sm border border-border rounded-lg p-3 text-sm animate-fade-in`}>
         <h4 className="font-semibold mb-2">Legend</h4>
         <div className="space-y-1">
           <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full" style={{ backgroundColor: statusColors['on-time'] }}></div><span>On Time</span></div>

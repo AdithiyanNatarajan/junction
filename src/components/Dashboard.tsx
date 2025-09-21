@@ -13,10 +13,17 @@ import {
 } from '@/data/mockData';
 import { Activity } from 'lucide-react';
 
-export default function Dashboard() {
+interface DashboardProps {
+  filteredTrains?: any[];
+  onAreaChange?: (area: string) => void;
+}
+
+export default function Dashboard({ filteredTrains, onAreaChange }: DashboardProps) {
   const [trains, setTrains] = useState(mockTrains);
   const [currentTime, setCurrentTime] = useState(new Date());
 
+  // Use filtered trains if provided, otherwise use all trains
+  const displayTrains = filteredTrains && filteredTrains.length > 0 ? filteredTrains : trains;
   // Update time every second for real-time feel
   useEffect(() => {
     const timer = setInterval(() => {
@@ -184,6 +191,8 @@ export default function Dashboard() {
           trains={trains} 
           segments={mockRailwaySegments}
           className="h-96 lg:h-[500px]"
+          showAreaSelection={true}
+          onAreaChange={onAreaChange}
         />
       </Card>
     </div>

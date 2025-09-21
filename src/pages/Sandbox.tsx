@@ -76,44 +76,62 @@ export default function Sandbox() {
   const runSimulation = () => {
     setSimulationRunning(true);
     
-    // Simulate API call delay
-    setTimeout(() => {
-      const scenario = scenarios.find(s => s.id === selectedScenario);
-      if (!scenario) return;
+    const scenario = scenarios.find(s => s.id === selectedScenario);
+    if (!scenario) return;
 
-      // Apply scenario modifications
-      const updatedTrains = mockTrains.map(train => {
-        let updatedTrain = { ...train };
+    // Apply scenario modifications
+    const updatedTrains = mockTrains.map(train => {
+      let updatedTrain = { ...train };
+      
+      // Apply delays
+      const delayMod = scenario.modifications.trainDelays?.find(d => d.trainId === train.id);
+      if (delayMod) {
+        updatedTrain.delayMinutes = delayMod.delay;
+        updatedTrain.status = delayMod.delay > 30 ? 'critical' : 
+                            delayMod.delay > 10 ? 'delayed' : 'on-time';
         
-        // Apply delays
-        const delayMod = scenario.modifications.trainDelays?.find(d => d.trainId === train.id);
-        if (delayMod) {
-          updatedTrain.delayMinutes = delayMod.delay;
-          updatedTrain.status = delayMod.delay > 30 ? 'critical' : 
-                              delayMod.delay > 10 ? 'delayed' : 'on-time';
-          
-          // Calculate new actual time
-          const scheduled = new Date(`2024-01-01 ${train.scheduledTime}`);
-          const actual = new Date(scheduled.getTime() + delayMod.delay * 60000);
-          updatedTrain.actualTime = actual.toLocaleTimeString('en-US', { 
-            hour12: false, 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          });
-        }
+        // Calculate new actual time
+        const scheduled = new Date(`2024-01-01 ${train.scheduledTime}`);
+        const actual = new Date(scheduled.getTime() + delayMod.delay * 60000);
+        updatedTrain.actualTime = actual.toLocaleTimeString('en-US', { 
+          hour12: false, 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
+      }
 
-        // Apply priority changes
-        const priorityMod = scenario.modifications.priorityChanges?.find(p => p.trainId === train.id);
-        if (priorityMod) {
-          updatedTrain.priority = priorityMod.priority;
-        }
+      // Apply priority changes
+      const priorityMod = scenario.modifications.priorityChanges?.find(p => p.trainId === train.id);
+      if (priorityMod) {
+        updatedTrain.priority = priorityMod.priority;
+      }
 
-        return updatedTrain;
-      });
+      return updatedTrain;
+    });
 
-      setModifiedTrains(updatedTrains);
+    setModifiedTrains(updatedTrains);
 
-      // Generate mock results
+    // Call backend evaluation API
+    fetch('http://127.0.0.1:8000/sandbox/evaluate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        scenario: selectedScenario,
+        modifiedTrains: updatedTrains,
+        modifiedSegments: modifiedSegments
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Sandbox evaluation result:', data);
+      setResults(data);
+      setSimulationRunning(false);
+    })
+    .catch(error => {
+      console.error('Sandbox evaluation error:', error);
+      // Fallback to local calculation
       const totalDelay = updatedTrains.reduce((sum, train) => sum + train.delayMinutes, 0);
       const affectedPassengers = updatedTrains
         .filter(train => train.delayMinutes > 0)
@@ -130,9 +148,8 @@ export default function Sandbox() {
           `Suggested compensation: ${Math.round(affectedPassengers * 0.1)} vouchers`
         ]
       });
-
       setSimulationRunning(false);
-    }, 2000);
+    });
   };
 
   const resetSimulation = () => {
