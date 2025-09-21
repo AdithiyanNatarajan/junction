@@ -1,0 +1,159 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Railway Traffic Control Design System - Dark Professional Theme */
+
+@layer base {
+  :root {
+    /* Dark control room theme */
+    --background: 220 25% 8%;
+    --foreground: 210 15% 95%;
+
+    --card: 220 20% 10%;
+    --card-foreground: 210 15% 95%;
+
+    --popover: 220 25% 8%;
+    --popover-foreground: 210 15% 95%;
+
+    --primary: 142 76% 36%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 220 15% 15%;
+    --secondary-foreground: 210 15% 95%;
+
+    --muted: 220 15% 12%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 45 93% 47%;
+    --accent-foreground: 220 25% 8%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+
+    /* Railway specific colors */
+    --rail-success: 142 76% 36%;
+    --rail-warning: 45 93% 47%;
+    --rail-danger: 0 72% 51%;
+    --rail-info: 217 91% 60%;
+    --rail-neutral: 215 20% 65%;
+
+    /* Status indicators */
+    --status-on-time: 142 76% 36%;
+    --status-delayed: 45 93% 47%;
+    --status-critical: 0 72% 51%;
+    --status-maintenance: 262 83% 58%;
+
+    --border: 220 15% 20%;
+    --input: 220 15% 15%;
+    --ring: 217 91% 60%;
+
+    --radius: 0.375rem;
+
+    /* Gradients */
+    --gradient-rail-status: linear-gradient(135deg, hsl(var(--rail-success)), hsl(var(--rail-info)));
+    --gradient-warning: linear-gradient(135deg, hsl(var(--rail-warning)), hsl(var(--rail-danger)));
+    --gradient-control: linear-gradient(180deg, hsl(var(--card)), hsl(var(--background)));
+
+    /* Shadows */
+    --shadow-rail: 0 4px 20px -4px hsl(var(--primary) / 0.3);
+    --shadow-alert: 0 4px 20px -4px hsl(var(--rail-danger) / 0.4);
+    --shadow-success: 0 4px 20px -4px hsl(var(--rail-success) / 0.3);
+
+    /* Animations */
+    --transition-rail: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Remove dark mode since we're using a dark theme by default */
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-mono;
+  }
+
+  /* Custom railway control styles */
+  .rail-pulse {
+    animation: rail-pulse 2s infinite;
+  }
+
+  .rail-blink {
+    animation: rail-blink 1s infinite;
+  }
+
+  .status-indicator {
+    @apply w-3 h-3 rounded-full hover-scale;
+  }
+
+  .status-on-time {
+    background: hsl(var(--status-on-time));
+    box-shadow: 0 0 8px hsl(var(--status-on-time) / 0.6);
+  }
+
+  .status-delayed {
+    background: hsl(var(--status-delayed));
+    box-shadow: 0 0 8px hsl(var(--status-delayed) / 0.6);
+  }
+
+  .status-critical {
+    background: hsl(var(--status-critical));
+    box-shadow: 0 0 8px hsl(var(--status-critical) / 0.6);
+  }
+
+  .control-panel {
+    background: var(--gradient-control);
+    border: 1px solid hsl(var(--border));
+  }
+}
+
+@layer components {
+  .rail-card {
+    @apply bg-card border border-border rounded-lg p-4 shadow-sm animate-fade-in;
+    transition: var(--transition-rail);
+  }
+
+  .rail-card:hover {
+    box-shadow: var(--shadow-rail);
+  }
+
+  .alert-card {
+    @apply border-l-4 border-l-red-500 bg-card/50;
+    box-shadow: var(--shadow-alert);
+  }
+
+  .success-card {
+    @apply border-l-4 border-l-green-500 bg-card/50;
+    box-shadow: var(--shadow-success);
+  }
+
+  /* Interactive utilities */
+  .hover-scale { @apply transition-transform duration-200 hover:scale-105; }
+
+  .story-link * { @apply relative inline-block after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left; }
+
+  .pulse { @apply animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite]; }
+}
+
+
+@keyframes rail-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes rail-blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0.3;
+  }
+}
+
